@@ -140,11 +140,12 @@
                     <p class="section-description">Set the depth of the logic verification stream</p>
                 </div>
                 <div class="experience-grid">
-                    @foreach (var level in new[] { "Beginner", "Intermediate", "Advanced" })
+                    @foreach (var level in new[] { "Beginner", "Intermediate", "Professional", "Advanced" })
                     {
                         var levelDesc = level switch {
                             "Beginner" => "Foundational syntax check and basic implementation logic.",
-                            "Intermediate" => "Standard professional patterns and architectural verification.",
+                            "Intermediate" => "Applied concepts, common patterns and everyday implementation.",
+                            "Professional" => "Workplace-level patterns, debugging, architecture and secure delivery.",
                             "Advanced" => "High-level optimization, security and complex architecture.",
                             _ => ""
                         };

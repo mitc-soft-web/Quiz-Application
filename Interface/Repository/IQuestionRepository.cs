@@ -13,6 +13,7 @@ namespace Quiz_Application.Interface.Repository
         Task<Question?> GetQuestionByIdAsync(Guid questionId);
         Task<IEnumerable<Question>> GetAllQuestionsAsync();
         Task<IEnumerable<Question>> GetRandomQuestionsAsync(int count);
+        Task<IEnumerable<string>> GetPreviousQuestionTextsAsync(Guid userId, Guid languageId);
         Task SaveAsync();
         Task DeleteAsync(Question question);
     }

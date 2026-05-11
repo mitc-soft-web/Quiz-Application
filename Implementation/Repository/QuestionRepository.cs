@@ -56,6 +56,17 @@ namespace Quiz_Application.Implementation.Repository
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<string>> GetPreviousQuestionTextsAsync(Guid userId, Guid languageId)
+        {
+            return await _quizContext.Questions
+                .Include(q => q.Quiz)
+                .Where(q => q.LanguageId == languageId && q.Quiz != null && q.Quiz.UserId == userId)
+                .Select(q => q.QuestionText ?? string.Empty)
+                .Where(q => q != string.Empty)
+                .Distinct()
+                .ToListAsync();
+        }
+
         public async Task SaveAsync()
         {
             await _quizContext.SaveChangesAsync();

@@ -62,7 +62,7 @@ namespace Quiz_Application.Implementation.Service
             await _quizRepository.CreateQuiz(quiz);
 
             var requestedCount = questionCount > 0 ? Math.Clamp(questionCount, 20, 150) : 20;
-            var aiQuestions = await _questionService.GenerateQuestionsFromApiAsync(languageId, level, requestedCount, cancellation);
+            var aiQuestions = await _questionService.GenerateQuestionsFromApiAsync(languageId, level, requestedCount, userId, cancellation);
 
             if (aiQuestions == null || !aiQuestions.Any())
             {

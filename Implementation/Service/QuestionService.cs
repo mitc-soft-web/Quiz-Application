@@ -41,17 +41,21 @@ namespace Quiz_Application.Implementation.Service
             _geminiApiKey = _config["Gemini:ApiKey"] ?? string.Empty;
         }
 
-        public async Task<List<QuestionDTO>> GenerateQuestionsFromApiAsync(Guid languageId, string level, int numberOfQuestions, CancellationToken cancellation)
+        public async Task<List<QuestionDTO>> GenerateQuestionsFromApiAsync(Guid languageId, string level, int numberOfQuestions, Guid userId, CancellationToken cancellation)
         {
             var language = await _languageRepository.GetLanguageByIdAsync(languageId);
             if (language == null) throw new Exception("Invalid language");
 
             numberOfQuestions = Math.Clamp(numberOfQuestions, 20, 150);
             var languageName = language.LanguageName ?? "Technology";
+            var focusAreas = GetFocusAreas(languageName);
+            var previousQuestions = (await _questionRepository.GetPreviousQuestionTextsAsync(userId, languageId))
+                .Select(NormalizeQuestion)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             if (string.IsNullOrWhiteSpace(_geminiApiKey))
             {
-                return BuildFallbackQuestions(languageId, languageName, level, numberOfQuestions);
+                return BuildFallbackQuestions(languageId, languageName, level, numberOfQuestions, previousQuestions, focusAreas);
             }
 
             var questions = new List<QuestionDTO>();
@@ -61,7 +65,7 @@ namespace Quiz_Application.Implementation.Service
             {
                 var remaining = numberOfQuestions - questions.Count;
                 var currentBatchSize = Math.Min(batchSize, remaining);
-                var prompt = BuildPrompt(languageName, level, currentBatchSize, questions.Count + 1);
+                var prompt = BuildPrompt(languageName, level, currentBatchSize, questions.Count + 1, previousQuestions, focusAreas);
 
                 var requestBody = new
                 {
@@ -104,7 +108,9 @@ namespace Quiz_Application.Implementation.Service
 
                     var cleanedJson = Regex.Replace(geminiContent ?? "[]", @"^```json|```$", "", RegexOptions.Multiline).Trim();
                     var rawQuestions = JsonSerializer.Deserialize<List<ExternalQuestionModel>>(cleanedJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    var batchQuestions = MapQuestions(rawQuestions, languageId, level, currentBatchSize);
+                    var currentQuestions = questions.Select(q => NormalizeQuestion(q.QuestionText)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var blockedQuestions = previousQuestions.Concat(currentQuestions).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var batchQuestions = MapQuestions(rawQuestions, languageId, level, currentBatchSize, blockedQuestions);
 
                     if (!batchQuestions.Any())
                     {
@@ -122,7 +128,10 @@ namespace Quiz_Application.Implementation.Service
 
             if (questions.Count < numberOfQuestions)
             {
-                var fallback = BuildFallbackQuestions(languageId, languageName, level, numberOfQuestions - questions.Count);
+                var blockedQuestions = previousQuestions
+                    .Concat(questions.Select(q => NormalizeQuestion(q.QuestionText)))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var fallback = BuildFallbackQuestions(languageId, languageName, level, numberOfQuestions - questions.Count, blockedQuestions, focusAreas);
                 questions.AddRange(fallback);
             }
 
@@ -223,11 +232,20 @@ namespace Quiz_Application.Implementation.Service
 
 
 
-        private static string BuildPrompt(string languageName, string level, int count, int startNumber)
+        private static string BuildPrompt(string languageName, string level, int count, int startNumber, HashSet<string> previousQuestions, List<string> focusAreas)
         {
+            var exclusions = previousQuestions.Any()
+                ? "Do not repeat or closely paraphrase these previous questions: " + string.Join(" | ", previousQuestions.Take(40)) + ". "
+                : string.Empty;
+            var difficultyInstruction = GetDifficultyInstruction(level);
+            var focusText = string.Join(", ", focusAreas);
+
             return $"Generate exactly {count} multiple-choice quiz questions for the selected technology topic: {languageName}. " +
                    $"The questions must be about {languageName} only, not about a general course category. " +
-                   $"Difficulty level: {level}. " +
+                   $"Cover all these subtopics/focus areas in a mixed way: {focusText}. " +
+                   exclusions +
+                   $"Mix the question types: definitions, syntax or commands where relevant, debugging, security, practical scenarios, best practices, and real-world problem solving. " +
+                   $"Difficulty level: {level}. {difficultyInstruction} " +
                    $"Start from question number {startNumber}, but do not include numbering in the JSON. " +
                    $"Each question must have 4 options. " +
                    $"The correctAnswer must be the full text of one of the options. " +
@@ -236,18 +254,20 @@ namespace Quiz_Application.Implementation.Service
                    $"Do not use markdown, explanations, comments, or trailing commas.";
         }
 
-        private static List<QuestionDTO> MapQuestions(List<ExternalQuestionModel>? rawQuestions, Guid languageId, string level, int count)
+        private static List<QuestionDTO> MapQuestions(List<ExternalQuestionModel>? rawQuestions, Guid languageId, string level, int count, HashSet<string> blockedQuestions)
         {
             if (rawQuestions == null) return new List<QuestionDTO>();
 
             return rawQuestions
                 .Where(q => !string.IsNullOrWhiteSpace(q.Question) && q.Options.Count >= 4)
+                .Where(q => !blockedQuestions.Contains(NormalizeQuestion(q.Question)))
                 .Take(count)
                 .Select(q =>
                 {
                     var options = q.Options.Take(4).Select(o => o ?? string.Empty).ToList();
                     var correctAnswer = options.FirstOrDefault(o => string.Equals(o, q.CorrectAnswer, StringComparison.OrdinalIgnoreCase))
                         ?? options.First();
+                    options = ShuffleOptions(options);
 
                     return new QuestionDTO
                     {
@@ -272,42 +292,130 @@ namespace Quiz_Application.Implementation.Service
             public string CorrectAnswer { get; set; } = "";
         }
 
-        private static List<QuestionDTO> BuildFallbackQuestions(Guid languageId, string languageName, string level, int count)
+        private static List<QuestionDTO> BuildFallbackQuestions(Guid languageId, string languageName, string level, int count, HashSet<string> blockedQuestions, List<string> focusAreas)
         {
             var templates = new[]
             {
-                new { Question = "What is the main purpose of studying {0}?", A = "To understand core concepts and solve related problems", B = "To avoid using documentation", C = "To memorize unrelated facts", D = "To remove all testing", Correct = "To understand core concepts and solve related problems" },
-                new { Question = "Which practice is most useful when learning {0}?", A = "Building small practical examples", B = "Skipping fundamentals", C = "Ignoring errors", D = "Avoiding feedback", Correct = "Building small practical examples" },
-                new { Question = "At {1} level, what should a learner focus on in {0}?", A = "Concepts, use cases, and correct application", B = "Random guessing", C = "Only UI colors", D = "Deleting previous work", Correct = "Concepts, use cases, and correct application" },
-                new { Question = "What helps improve performance in {0}?", A = "Measuring, identifying bottlenecks, and optimizing carefully", B = "Changing code blindly", C = "Removing validation", D = "Ignoring user needs", Correct = "Measuring, identifying bottlenecks, and optimizing carefully" },
-                new { Question = "Which approach makes {0} projects easier to maintain?", A = "Clear structure, readable naming, and testing", B = "Duplicating every file", C = "Hiding all errors", D = "Avoiding version control", Correct = "Clear structure, readable naming, and testing" },
-                new { Question = "When debugging {0}, what should you do first?", A = "Reproduce the issue and inspect the error message", B = "Delete unrelated files", C = "Ignore logs", D = "Guess until it works", Correct = "Reproduce the issue and inspect the error message" },
-                new { Question = "Which habit improves reliability in {0} work?", A = "Testing important behavior before release", B = "Skipping validation", C = "Never reviewing code", D = "Using random configuration", Correct = "Testing important behavior before release" },
-                new { Question = "Why is documentation useful in {0}?", A = "It explains expected behavior and decisions", B = "It replaces all testing", C = "It makes errors impossible", D = "It removes the need to understand the topic", Correct = "It explains expected behavior and decisions" },
-                new { Question = "What should guide design choices in {0}?", A = "Requirements, constraints, and maintainability", B = "Only visual preference", C = "Copying unrelated projects", D = "Avoiding user needs", Correct = "Requirements, constraints, and maintainability" },
-                new { Question = "Which action helps secure a {0} solution?", A = "Validate inputs and apply least privilege", B = "Store secrets in public pages", C = "Disable authentication", D = "Trust every request", Correct = "Validate inputs and apply least privilege" },
-                new { Question = "How should a {0} learner handle mistakes?", A = "Analyze the cause and correct the concept", B = "Ignore the mistake", C = "Memorize the wrong answer", D = "Stop practicing", Correct = "Analyze the cause and correct the concept" },
-                new { Question = "What makes {0} knowledge practical?", A = "Applying concepts in real scenarios", B = "Only reading definitions", C = "Avoiding exercises", D = "Skipping feedback", Correct = "Applying concepts in real scenarios" },
-                new { Question = "Which factor matters when scaling {0} solutions?", A = "Performance, reliability, and resource usage", B = "Longer variable names only", C = "Removing monitoring", D = "Ignoring errors", Correct = "Performance, reliability, and resource usage" },
-                new { Question = "What is a good review strategy for {0}?", A = "Check correctness, security, readability, and tests", B = "Approve without reading", C = "Only check colors", D = "Remove all comments", Correct = "Check correctness, security, readability, and tests" }
+                new { Question = "In {0}, why is {2} important?", A = "It helps solve real problems correctly", B = "It removes the need to test", C = "It makes every answer automatic", D = "It should be ignored in projects", Correct = "It helps solve real problems correctly" },
+                new { Question = "For {1} level {0}, what is the best way to practice {2}?", A = "Build examples and check the result", B = "Guess without testing", C = "Avoid documentation", D = "Skip the basics entirely", Correct = "Build examples and check the result" },
+                new { Question = "When debugging {2} in {0}, what should you do first?", A = "Reproduce the issue and inspect the error", B = "Delete unrelated code", C = "Ignore logs", D = "Change random settings", Correct = "Reproduce the issue and inspect the error" },
+                new { Question = "Which habit improves reliability when working with {2} in {0}?", A = "Test important behavior before release", B = "Skip validation", C = "Never review code", D = "Use random configuration", Correct = "Test important behavior before release" },
+                new { Question = "Which security practice matters for {2} in {0}?", A = "Validate input and use least privilege", B = "Disable authentication", C = "Trust every request", D = "Expose secrets publicly", Correct = "Validate input and use least privilege" },
+                new { Question = "What should guide design choices for {2} in {0}?", A = "Requirements, constraints, and maintainability", B = "Only visual preference", C = "Copying unrelated projects", D = "Avoiding user needs", Correct = "Requirements, constraints, and maintainability" }
             };
 
-            return Enumerable.Range(0, count).Select(index =>
+            var questions = new List<QuestionDTO>();
+            var attempt = 0;
+
+            while (questions.Count < count && attempt < count * 4)
             {
-                var template = templates[index % templates.Length];
-                return new QuestionDTO
+                var template = templates[attempt % templates.Length];
+                var focusArea = focusAreas[attempt % focusAreas.Count];
+                var questionText = string.Format(template.Question, languageName, level, focusArea);
+                if (attempt >= templates.Length)
+                {
+                    questionText = $"{questionText} Scenario {attempt / templates.Length + 1}.";
+                }
+
+                var normalized = NormalizeQuestion(questionText);
+                attempt++;
+                if (blockedQuestions.Contains(normalized))
+                {
+                    continue;
+                }
+
+                blockedQuestions.Add(normalized);
+                var options = ShuffleOptions(new List<string> { template.A, template.B, template.C, template.D });
+
+                questions.Add(new QuestionDTO
                 {
                     Id = Guid.NewGuid(),
-                    QuestionText = string.Format(template.Question, languageName, level),
-                    OptionA = template.A,
-                    OptionB = template.B,
-                    OptionC = template.C,
-                    OptionD = template.D,
+                    QuestionText = questionText,
+                    OptionA = options.ElementAtOrDefault(0) ?? string.Empty,
+                    OptionB = options.ElementAtOrDefault(1) ?? string.Empty,
+                    OptionC = options.ElementAtOrDefault(2) ?? string.Empty,
+                    OptionD = options.ElementAtOrDefault(3) ?? string.Empty,
                     CorrectAnswer = template.Correct,
                     LanguageId = languageId,
                     Difficulty = level
-                };
-            }).ToList();
+                });
+            }
+
+            return questions;
+        }
+
+        private static List<string> ShuffleOptions(List<string> options)
+        {
+            return options
+                .OrderBy(_ => Random.Shared.Next())
+                .ToList();
+        }
+
+        private static string GetDifficultyInstruction(string level)
+        {
+            return level?.Trim().ToLowerInvariant() switch
+            {
+                "beginner" => "Ask simple foundation questions: meaning, basic syntax, basic usage, simple examples, and common beginner mistakes.",
+                "intermediate" => "Ask applied questions: practical use cases, normal project patterns, debugging, data flow, and correct implementation choices.",
+                "professional" => "Ask workplace-level questions: architecture decisions, security, maintainability, performance tradeoffs, integration, testing, and debugging production-style issues.",
+                "advanced" => "Ask advanced questions: optimization, internals, complex scenarios, scalability, edge cases, and expert-level reasoning.",
+                "expert" => "Ask expert questions: deep internals, architecture tradeoffs, failure modes, performance, and scenario-based problem solving.",
+                _ => "Match the requested skill level and keep the questions practical."
+            };
+        }
+
+        private static List<string> GetFocusAreas(string languageName)
+        {
+            var key = languageName.Trim().ToLowerInvariant();
+            var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["c# .net"] = new() { "C# syntax", "OOP", "LINQ", "ASP.NET Core MVC", "Web API", "Entity Framework Core", "dependency injection", "async/await", "middleware", "authentication", "validation", "debugging", "unit testing" },
+                ["asp.net core mvc"] = new() { "controllers", "actions", "routing", "views", "models", "Razor syntax", "model binding", "validation", "Entity Framework Core", "authentication", "dependency injection", "middleware" },
+                ["php"] = new() { "PHP syntax", "forms", "sessions", "arrays", "functions", "OOP", "PDO database access", "Laravel basics", "validation", "authentication", "security", "file handling" },
+                ["python"] = new() { "Python syntax", "functions", "lists and dictionaries", "OOP", "exceptions", "file handling", "modules", "virtual environments", "Django basics", "FastAPI basics", "testing", "debugging" },
+                ["java"] = new() { "Java syntax", "OOP", "collections", "exceptions", "streams", "Spring Boot", "JPA/Hibernate", "REST APIs", "validation", "testing", "debugging" },
+                ["javascript"] = new() { "JavaScript syntax", "DOM", "functions", "arrays", "objects", "promises", "async/await", "events", "fetch API", "Node.js", "debugging", "browser behavior" },
+                ["typescript"] = new() { "types", "interfaces", "generics", "classes", "modules", "async logic", "type narrowing", "Node.js", "frontend integration", "debugging" },
+                ["c++"] = new() { "syntax", "pointers", "references", "OOP", "STL containers", "memory management", "templates", "exceptions", "performance", "debugging" },
+                ["c programming"] = new() { "syntax", "pointers", "arrays", "strings", "structs", "memory allocation", "file I/O", "preprocessor", "debugging", "data structures" },
+                ["html5"] = new() { "semantic HTML", "forms", "tables", "media", "accessibility", "SEO basics", "validation", "page structure" },
+                ["css3"] = new() { "selectors", "box model", "flexbox", "grid", "responsive design", "variables", "animations", "specificity", "layout debugging" },
+                ["react.js"] = new() { "components", "props", "state", "hooks", "events", "forms", "routing", "API calls", "rendering", "performance", "testing" },
+                ["angular"] = new() { "components", "templates", "services", "dependency injection", "routing", "forms", "RxJS", "HTTP client", "guards", "testing" },
+                ["vue.js"] = new() { "components", "reactivity", "props", "events", "composition API", "routing", "Pinia", "forms", "API calls" },
+                ["node.js"] = new() { "runtime", "modules", "npm", "Express", "routing", "middleware", "REST APIs", "authentication", "database access", "error handling" },
+                ["sql database"] = new() { "SELECT queries", "joins", "filtering", "aggregation", "indexes", "normalization", "transactions", "stored procedures", "query optimization" },
+                ["mysql"] = new() { "tables", "relationships", "SELECT queries", "joins", "indexes", "constraints", "transactions", "stored procedures", "backup basics" },
+                ["network security"] = new() { "firewalls", "VPNs", "TLS", "DNS security", "IDS/IPS", "Wireshark", "network attacks", "hardening", "monitoring" },
+                ["cybersecurity fundamentals"] = new() { "CIA triad", "authentication", "authorization", "cryptography", "risk assessment", "malware", "incident response", "secure passwords" },
+                ["aws cloud services"] = new() { "EC2", "S3", "IAM", "VPC", "Lambda", "RDS", "CloudFront", "security groups", "monitoring", "cost basics" },
+                ["microsoft azure"] = new() { "Azure App Service", "Azure Functions", "storage accounts", "Entra ID", "Cosmos DB", "virtual networks", "monitoring", "deployment" },
+                ["machine learning"] = new() { "supervised learning", "unsupervised learning", "features", "training", "testing", "metrics", "overfitting", "model evaluation", "scikit-learn" },
+                ["artificial intelligence"] = new() { "AI concepts", "machine learning", "neural networks", "NLP", "computer vision", "model evaluation", "prompt engineering", "ethics" }
+            };
+
+            if (map.TryGetValue(key, out var focusAreas)) return focusAreas;
+
+            foreach (var pair in map)
+            {
+                if (key.Contains(pair.Key) || pair.Key.Contains(key))
+                {
+                    return pair.Value;
+                }
+            }
+
+            return new List<string>
+            {
+                "core concepts", "basic syntax or terminology", "practical usage", "debugging",
+                "security", "best practices", "testing", "performance", "real-world scenarios"
+            };
+        }
+
+        private static string NormalizeQuestion(string? question)
+        {
+            if (string.IsNullOrWhiteSpace(question)) return string.Empty;
+            var lower = question.Trim().ToLowerInvariant();
+            return Regex.Replace(lower, @"\s+", " ");
         }
     }
 }
