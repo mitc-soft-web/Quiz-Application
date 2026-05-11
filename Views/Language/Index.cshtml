@@ -1,0 +1,192 @@
+﻿@model IEnumerable<Quiz_Application.Models.DTO.LanguageDTO>
+@{
+    ViewData["Title"] = "Neural Calibration";
+    Layout = null; 
+    var currentCourse = ViewBag.CurrentCourse as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calibration Hub | Q-MSTech</title>
+    
+    <!-- Professional CDNs -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --mst-primary: #6366f1;
+            --mst-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --bg-deep: #020617;
+            --glass-card: rgba(15, 23, 42, 0.8);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            background-image: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+        }
+
+        .main-container { max-width: 1000px; margin: 0 auto; padding: 4rem 1.5rem; }
+        .page-header { margin-bottom: 3.5rem; }
+        .page-title { font-family: 'Orbitron'; font-size: 1.8rem; letter-spacing: 2px; }
+        .text-gradient { background: var(--mst-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .content-card { 
+            background: var(--glass-card); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 32px; 
+            padding: 3.5rem; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5); 
+        }
+
+        .form-section { margin-bottom: 4.5rem; }
+        .section-header { margin-bottom: 2rem; }
+        .section-title { font-family: 'Orbitron'; font-size: 0.85rem; letter-spacing: 2px; color: var(--mst-primary); margin-bottom: 0.5rem; font-weight: 700; }
+        .section-description { font-size: 0.8rem; color: #64748b; margin: 0; }
+
+        /* Generic Card Styles */
+        .skills-grid, .experience-grid { display: grid; gap: 1.2rem; }
+        .skills-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .experience-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+        
+        .skill-input, .experience-input, .question-input { display: none; }
+
+        .skill-card, .experience-card, .question-card { 
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; 
+            padding: 1.5rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        /* Hover & Checked Effects */
+        .skill-input:checked + .skill-card, 
+        .experience-input:checked + .experience-card,
+        .question-input:checked + .question-card { 
+            border-color: var(--mst-primary); 
+            background: rgba(99, 102, 241, 0.12); 
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .skill-name { font-weight: 700; font-size: 0.9rem; display: block; color: white; margin-bottom: 4px; }
+        .skill-id { font-family: 'Orbitron'; font-size: 0.55rem; color: #22d3ee; opacity: 0.6; }
+        .experience-level { font-family: 'Orbitron'; font-size: 0.85rem; display: block; margin-bottom: 0.6rem; font-weight: 700; color: #eef2ff; }
+        .experience-description { font-size: 0.75rem; color: #94a3b8; line-height: 1.5; margin: 0; }
+
+        /* Volume Grid */
+        .questions-grid { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+        .question-card { 
+            width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .question-input:checked + .question-card { background: var(--mst-gradient); border: none; }
+        .question-number { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: 900; }
+        .question-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; }
+
+        .btn-neural-launch {
+            background: var(--mst-gradient); color: white; border: none; border-radius: 20px;
+            padding: 1.5rem; font-family: 'Orbitron'; font-weight: 800; width: 100%; transition: 0.4s;
+            margin-top: 2rem; letter-spacing: 3px; text-transform: uppercase; font-size: 1rem;
+        }
+        .btn-neural-launch:hover { transform: translateY(-5px); box-shadow: 0 25px 50px rgba(99, 102, 241, 0.4); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="page-header d-flex justify-content-between align-items-end">
+        <div>
+            <h1 class="page-title">NEURAL_<span class="text-gradient">CALIBRATION</span></h1>
+            <p class="text-muted small m-0">Synchronizing modules for: <span class="text-white fw-bold">@currentCourse?.ToUpper()</span></p>
+        </div>
+        <a asp-controller="Course" asp-action="Index" class="btn btn-outline-light border-0 opacity-50 small fw-bold">
+            <i class="bi bi-arrow-left me-2"></i>HUB
+        </a>
+    </div>
+
+    <div class="content-card">
+        <form asp-controller="Quiz" asp-action="Generate" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- SECTION 01: TECHNICAL MODULE -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h2 class="section-title">01. IDENTIFY_LOGIC_CLUSTER</h2>
+                    <p class="section-description">Select the specific module within the technical matrix</p>
+                </div>
+                <div class="skills-grid">
+                    @foreach (var lang in Model)
+                    {
+                        <div class="skill-option">
+                            <input type="radio" id="L-@lang.Id" name="languageId" value="@lang.Id" class="skill-input" required />
+                            <label for="L-@lang.Id" class="skill-card">
+                                <span class="skill-name">@((lang.LanguageName ?? "Topic").ToUpper())</span>
+                                <span class="skill-id">LINK_@((lang.LanguageName ?? lang.Id.ToString()).GetHashCode().ToString("X"))</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- SECTION 02: INTENSITY -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h2 class="section-title">02. CALIBRATION_INTENSITY</h2>
+                    <p class="section-description">Set the depth of the logic verification stream</p>
+                </div>
+                <div class="experience-grid">
+                    @foreach (var level in new[] { "Beginner", "Intermediate", "Advanced" })
+                    {
+                        var levelDesc = level switch {
+                            "Beginner" => "Foundational syntax check and basic implementation logic.",
+                            "Intermediate" => "Standard professional patterns and architectural verification.",
+                            "Advanced" => "High-level optimization, security and complex architecture.",
+                            _ => ""
+                        };
+                        <div class="experience-option">
+                            <input type="radio" id="@level" name="level" value="@level" class="experience-input" required @(level == "Intermediate" ? "checked" : "") />
+                            <label for="@level" class="experience-card">
+                                <span class="experience-level">@level.ToUpper()_LEVEL</span>
+                                <p class="experience-description">@levelDesc</p>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- SECTION 03: LOGIC VOLUME -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h2 class="section-title">03. LOGIC_VOLUME</h2>
+                    <p class="section-description">Choose the number of data packets for validation</p>
+                </div>
+                <div class="questions-grid">
+                    @foreach (var count in new[] { 20, 50, 100, 150 })
+                    {
+                        var countId = $"q-{count}";
+                        <div class="question-option">
+                            <input type="radio" id="@countId" name="questionCount" value="@count" class="question-input" required @(count == 20 ? "checked" : "") />
+                            <label for="@countId" class="question-card">
+                                <div class="question-number">@count</div>
+                                <span class="question-label">Packets</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <button type="submit" class="btn-neural-launch">
+                INITIALIZE_SIMULATION_PROTOCOL <i class="bi bi-cpu ms-2" style="font-size: 0.8rem;"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

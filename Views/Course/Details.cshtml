@@ -1,0 +1,175 @@
+﻿@{
+    Layout = null;
+}
+@model Quiz_Application.Controllers.CourseDetailsViewModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Course.CourseName - Q-MSTech</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary-tech: #00d2ff; 
+            --secondary-tech: #3a7bd5;
+            --dark-surface: #0f172a; 
+        }
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #1e293b; }
+        h1, h3, .navbar-brand { font-family: 'Space Grotesk', sans-serif; }
+        
+        .navbar { background: var(--dark-surface); padding: 0.8rem 2rem; }
+        .navbar-brand { color: white !important; font-weight: 700; }
+        .logo-accent { color: var(--primary-tech); }
+
+        .details-header {
+            background: linear-gradient(135deg, var(--dark-surface) 0%, #1e293b 100%);
+            padding: 4rem 0; color: white; border-radius: 0 0 2rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative background element */
+        .details-header::after {
+            content: "{}";
+            position: absolute;
+            right: 5%; bottom: -20px;
+            font-size: 10rem;
+            color: rgba(255,255,255,0.03);
+            font-family: serif;
+        }
+
+        .breadcrumb-item a { color: var(--primary-tech); text-decoration: none; font-weight: 600; }
+        .breadcrumb-item.active { color: rgba(255,255,255,0.6); }
+
+        .topic-card {
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .topic-card:hover { 
+            border-color: var(--primary-tech); 
+            transform: translateY(-3px) translateX(5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        
+        .status-dot { 
+            height: 12px; width: 12px; 
+            background: linear-gradient(to right, var(--primary-tech), var(--secondary-tech));
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 15px; 
+            box-shadow: 0 0 8px var(--primary-tech);
+        }
+
+        .btn-quiz {
+            background: var(--dark-surface);
+            color: white;
+            border-radius: 50px;
+            padding: 0.6rem 1.8rem;
+            font-weight: 700;
+            transition: 0.3s;
+            border: 2px solid transparent;
+        }
+        .btn-quiz:hover {
+            background: transparent;
+            color: var(--dark-surface);
+            border-color: var(--dark-surface);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" asp-action="Index">
+                <i class="bi bi-cpu me-2 logo-accent"></i>Q-MS<span class="logo-accent">Tech</span>
+            </a>
+            <div class="text-white-50 small d-none d-md-block">
+                <i class="bi bi-shield-check text-info me-1"></i> Data Stream: Verified
+            </div>
+        </div>
+    </nav>
+
+    <div class="details-header shadow">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-3">
+                    <li class="breadcrumb-item"><a asp-action="Index"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Course Details</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-4 d-none d-md-block">
+                    <i class="bi bi-journal-code display-4 text-info"></i>
+                </div>
+                <div>
+                    <h1 class="display-5 fw-bold mb-1">@Model.Course.CourseName</h1>
+                    <p class="opacity-75 lead mb-0"><i class="bi bi-robot me-2"></i>AI-Optimized Curriculum for Technical Mastery</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-9 mx-auto">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold m-0">
+                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Available Assessment Modules
+                    </h3>
+                    <span class="badge bg-dark rounded-pill px-3 py-2">@(Model.Topics?.Count ?? 0) Topics Found</span>
+                </div>
+
+                @if (Model.Topics != null && Model.Topics.Any())
+                {
+                    <div class="topic-list">
+                        @foreach (var topic in Model.Topics)
+                        {
+                            <div class="topic-card p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                                <div class="mb-3 mb-md-0 d-flex align-items-center">
+                                    <span class="status-dot"></span>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">@topic.LanguageName</h5>
+                                        <small class="text-muted">Module Ready for Initialization</small>
+                                    </div>
+                                </div>
+                                <a asp-controller="Quiz" 
+                                   asp-action="Index" 
+                                   asp-route-languageId="@topic.Id"
+                                   asp-route-languageName="@topic.LanguageName"
+                                   class="btn btn-quiz">
+                                   Start Assessment <i class="bi bi-lightning-fill ms-2 text-info"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 bg-white rounded-4 border">
+                        <i class="bi bi-cloud-slash display-1 opacity-25 mb-3"></i>
+                        <h4 class="text-muted">No data modules detected.</h4>
+                        <p class="text-secondary">Please return to the dashboard to regenerate the course stream.</p>
+                        <a asp-action="Index" class="btn btn-primary rounded-pill px-4 mt-2">Return to Dashboard</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <footer class="container py-4 text-center text-muted small border-top">
+        <p>&copy; @DateTime.Now.Year Q-MSTech | Technical Identity: @(User.Identity?.Name ?? "User")</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

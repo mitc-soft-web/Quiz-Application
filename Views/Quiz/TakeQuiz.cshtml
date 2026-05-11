@@ -1,0 +1,214 @@
+﻿@model Quiz_Application.Models.DTO.QuizDTO
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Q-MSTech | Assessment Session</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+            :root {
+                --primary-tech: #0d6efd;
+                --dark-surface: #0f172a;
+                --bg-subtle: #f8f9fa;
+            }
+
+            body {
+                background-color: var(--bg-subtle);
+                font-family: 'Inter', sans-serif;
+                padding-bottom: 100px; /* Space for sticky footer */
+            }
+
+            .brand-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 40px;
+                padding: 20px 0;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .logo-text {
+                font-family: 'Space Grotesk', sans-serif;
+                font-weight: 800;
+                font-size: 1.75rem;
+                color: var(--primary-tech);
+                letter-spacing: -1px;
+            }
+
+            .quiz-card {
+                border: none;
+                border-radius: 16px;
+                background: #ffffff;
+                transition: all 0.3s ease;
+            }
+
+            .question-number {
+                background: var(--dark-surface);
+                color: white;
+                padding: 6px 16px;
+                border-radius: 50px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .option-container {
+                border: 2px solid #f1f3f5;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                position: relative;
+            }
+
+                .option-container:hover {
+                    background-color: #f8fbff;
+                    border-color: var(--primary-tech);
+                    transform: translateX(5px);
+                }
+
+            /* Hide default radio but keep functionality */
+            .form-check-input {
+                width: 1.2em;
+                height: 1.2em;
+                margin-top: 0.15em;
+                cursor: pointer;
+            }
+
+                .form-check-input:checked + .form-check-label {
+                    font-weight: 600;
+                    color: var(--primary-tech);
+                }
+
+            .option-container:has(.form-check-input:checked) {
+                border-color: var(--primary-tech);
+                background-color: #f0f7ff;
+                box-shadow: 0 4px 12px rgba(13, 110, 253, 0.08);
+            }
+
+            .sticky-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 20px 0;
+                box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+                z-index: 1000;
+                border-top: 1px solid #eee;
+            }
+
+            .submit-btn {
+                border-radius: 14px;
+                padding: 14px;
+                font-weight: 700;
+                font-family: 'Space Grotesk', sans-serif;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                transition: all 0.3s;
+            }
+
+                .submit-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+                }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-4" style="max-width: 850px;">
+        <!-- Brand Header -->
+        <div class="brand-header">
+            <div>
+                <span class="logo-text">Q-MS</span><span class="text-dark fw-bold fs-3">Tech</span>
+            </div>
+            <div class="text-end">
+                <h4 class="mb-0 fw-bold text-dark">@Model.LanguageName</h4>
+                <span class="badge bg-light text-primary border border-primary-subtle text-uppercase">
+                    Level: @Model.Level
+                </span>
+            </div>
+        </div>
+
+        <form asp-action="Submit" method="post" id="quizForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="quizId" value="@Model.Id" />
+
+            @for (int i = 0; i < Model.Questions.Count; i++)
+            {
+                var q = Model.Questions[i];
+                <div class="card quiz-card shadow-sm mb-4 border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="mb-4">
+                            <span class="question-number">Node @(i + 1)</span>
+                        </div>
+                        <h5 class="card-title mb-4 lh-base fw-bold">@q.QuestionText</h5>
+                    
+                        <div class="options-list">
+                            @{
+                                var options = new[] {
+                                new { Val = q.OptionA, Letter = "A" },
+                                new { Val = q.OptionB, Letter = "B" },
+                                new { Val = q.OptionC, Letter = "C" },
+                                new { Val = q.OptionD, Letter = "D" }
+                            };
+                            }
+
+                            @foreach (var opt in options)
+                            {
+                                <label class="option-container d-block" for="q_@(q.Id)_@opt.Letter">
+                                    <div class="form-check m-0 d-flex align-items-center">
+                                        <input class="form-check-input shadow-none" type="radio"
+                                               name="answers[@q.Id]" value="@opt.Val"
+                                               id="q_@(q.Id)_@opt.Letter" required>
+                                        <span class="form-check-label ms-3 fs-6">
+                                            <span class="text-muted me-2">@opt.Letter.</span> @opt.Val
+                                        </span>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Sticky Action Bar -->
+            <div class="sticky-footer">
+                <div class="container" style="max-width: 850px;">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 submit-btn shadow">
+                        Finalize & Submit Assessment
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+            // Visual feedback for clicking the whole container
+            document.querySelectorAll('.option-container').forEach(container => {
+                container.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                });
+            });
+
+            // Loading state on submit
+            document.getElementById('quizForm').onsubmit = function() {
+                const btn = this.querySelector('.submit-btn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing System Submission...';
+            };
+    </script>
+
+</body>
+</html>

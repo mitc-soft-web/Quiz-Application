@@ -1,0 +1,83 @@
+﻿@model Quiz_Application.Models.DTO.ResultDTO
+@{
+    ViewData["Title"] = "Simulation Analysis";
+    Layout = null;
+    var percentage = (Model.Score / (double)Model.TotalQuestions) * 100;
+    var statusClass = percentage >= 70 ? "text-success" : (percentage >= 40 ? "text-warning" : "text-danger");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-MSTech | Analysis Report</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+        :root { --mst-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); --bg-soft: #f8fafc; }
+        body { background-color: var(--bg-soft); font-family: 'Inter', sans-serif; color: #1e293b; padding: 40px 20px; }
+        .report-card { background: white; border-radius: 35px; padding: 50px; border: 1px solid #f1f5f9; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.05); max-width: 900px; margin: 0 auto; }
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; border: 8px solid #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
+        .score-value { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 700; }
+        .stat-box { background: #f8fafc; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; text-align: center; }
+        .btn-finish { background: var(--mst-gradient); color: white !important; border: none; padding: 14px 40px; border-radius: 18px; font-weight: 800; font-family: 'Orbitron'; transition: 0.3s; }
+        .analysis-item { border-left: 4px solid #e2e8f0; padding-left: 20px; margin-bottom: 25px; }
+        .correct-border { border-color: #10b981; }
+        .wrong-border { border-color: #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="report-card">
+        <header class="text-center mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3 fw-bold">SIMULATION COMPLETED</span>
+            <h1 class="fw-bold" style="font-family:'Orbitron'">NEURAL_<span style="background: var(--mst-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ANALYSIS</span></h1>
+            <p class="text-muted">Verification ID: @Model.Id.ToString().Substring(0,8)</p>
+        </header>
+
+        <div class="row align-items-center mb-5">
+            <div class="col-md-5 text-center">
+                <div class="score-circle" style="border-top-color: #6366f1;">
+                    <div class="score-value @statusClass">@percentage.ToString("0")%</div>
+                </div>
+                <h5 class="fw-bold">Proficiency: <span class="@statusClass">@Model.Level</span></h5>
+            </div>
+            <div class="col-md-7">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <small class="text-muted fw-bold">CORRECT</small>
+                            <h3 class="mb-0 text-success fw-bold">@Model.Score</h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <small class="text-muted fw-bold">MISSED</small>
+                            <h3 class="mb-0 text-danger fw-bold">@(Model.TotalQuestions - Model.Score)</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-section mt-5">
+            <h6 class="fw-bold text-muted mb-4 text-uppercase tracking-widest"><i class="bi bi-cpu-fill me-2"></i> Logic Breakdown</h6>
+            <!-- Mapping individual question results would go here if provided in DTO -->
+            <div class="analysis-item @(percentage >= 70 ? "correct-border" : "wrong-border")">
+                <p class="mb-1 fw-bold">Technical Validation Outcome</p>
+                <small class="text-muted">The neural patterns generated during this session indicate a <strong>@Model.Level</strong> understanding of the subject matter.</small>
+            </div>
+        </div>
+
+        <footer class="text-center mt-5 pt-4 border-top">
+            <a asp-controller="User" asp-action="Dashboard" class="btn-finish shadow">RETURN_TO_DASHBOARD</a>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

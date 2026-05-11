@@ -1,0 +1,113 @@
+@model IEnumerable<Quiz_Application.Models.DTO.QuizDTO>
+@{
+    Layout = null;
+    ViewData["Title"] = "Neural History | Q-MSTech";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { --mst-cyan: #00d2ff; --mst-dark: #0f172a; }
+        body { background: #020617; color: white; font-family: 'Inter', sans-serif; }
+        
+        .history-table {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 210, 255, 0.1);
+        }
+
+        .table { color: white; margin-bottom: 0; }
+        .table thead { background: rgba(0, 210, 255, 0.05); }
+        .table th { border: none; color: var(--mst-cyan); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; padding: 1.5rem; }
+        .table td { border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem; vertical-align: middle; }
+
+        .score-badge {
+            background: rgba(0, 210, 255, 0.1);
+            color: var(--mst-cyan);
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+
+        .btn-back {
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .btn-back:hover { color: var(--mst-cyan); }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold m-0 text-uppercase">Sync_<span class="text-info">History</span></h1>
+            <p class="text-white-50 small">Reviewing past cognitive synchronization logs...</p>
+        </div>
+        <a asp-action="Index" asp-controller="Course" class="btn-back">
+            <i class="bi bi-arrow-left me-2"></i>Return to Hub
+        </a>
+    </div>
+
+    <div class="history-table shadow-lg">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Module / Language</th>
+                    <th>Date Stamp</th>
+                    <th>Accuracy</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@item.LanguageName</div>
+                                <div class="text-white-50 extra-small" style="font-size: 0.7rem;">ID: @item.Id.ToString().ToUpper().Substring(0,8)</div>
+                            </td>
+                            <td>@item.CreatedDate.ToString("yyyy.MM.dd | HH:mm")</td>
+                            <td>
+                                <span class="score-badge">
+                                    @(item.TotalQuestions > 0 ? $"{item.Score}/{item.TotalQuestions}" : item.Level)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-success small"><i class="bi bi-check-circle me-1"></i> RECORDED</span>
+                            </td>
+                            <td>
+                                <a asp-action="Review" asp-route-quizId="@item.Id" class="text-info small text-decoration-none fw-bold">REVIEW</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-white-50">
+                            <i class="bi bi-hdd-network display-4 mb-3 d-block opacity-25"></i>
+                            No synchronization logs found in local storage.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
+

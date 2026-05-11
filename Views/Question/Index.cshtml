@@ -1,0 +1,277 @@
+﻿@model IEnumerable<Quiz_Application.Models.DTO.Question.QuestionDTO>
+
+@{
+    ViewData["Title"] = "Module Configuration";
+    var quizId = ViewBag.QuizId;
+    var languageId = ViewBag.LanguageId;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-MSTech | Module Config</title>
+    
+    <!-- Professional CDNs -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+        :root {
+            --mst-primary: #6366f1;
+            --mst-secondary: #a855f7;
+            --mst-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --bg-white: #ffffff;
+            --bg-soft: #f8fafc;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-soft);
+            color: #1e293b;
+            padding: 40px;
+        }
+
+        /* Branding Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-text h2 {
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .text-gradient {
+            background: var(--mst-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Summary Stats (HUD) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-white);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .stat-icon {
+            width: 45px; height: 45px;
+            background: var(--mst-gradient);
+            color: white;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; }
+
+        /* Content Section */
+        .content-section {
+            background: var(--bg-white);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Table Styling */
+        .assessments-table { width: 100%; border-collapse: collapse; }
+        .assessments-table th {
+            text-align: left;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .assessments-table td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; }
+
+        .score-badge {
+            background: #eef2ff;
+            color: var(--mst-primary);
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        /* Buttons */
+        .btn-mst {
+            background: var(--mst-gradient);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-mst:hover { transform: translateY(-2px); color: white; opacity: 0.9; }
+        
+        .modal-content { border-radius: 25px; border: none; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-header">
+        <div class="welcome-text">
+            <h2>Module <span class="text-gradient">Configuration</span></h2>
+            <p class="member-since">Track ID: <span class="fw-bold">@languageId</span> | Synchronizing AI Neural Modules</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a asp-controller="User" asp-action="Dashboard" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i> BACK
+            </a>
+            <button class="btn-mst" data-bs-toggle="modal" data-bs-target="#aiModal">
+                <i class="bi bi-robot me-2"></i> AI GENERATION
+            </button>
+        </div>
+    </div>
+
+    <!-- HUD Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-cpu"></i></div>
+            <div class="stat-value">@(Model?.Count() ?? 0)</div>
+            <div class="stat-label">Total Modules</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-layers"></i></div>
+            <div class="stat-value">Active</div>
+            <div class="stat-label">System State</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-shield-check"></i></div>
+            <div class="stat-value">Verified</div>
+            <div class="stat-label">Logic Integrity</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-section">
+        <h2 class="section-title">
+            <i class="bi bi-terminal-fill text-primary"></i> Active Validation Units
+        </h2>
+        <div style="overflow-x: auto;">
+            <table class="assessments-table">
+                <thead>
+                    <tr>
+                        <th>Track ID</th>
+                        <th>Validation Logic / Question</th>
+                        <th>Structure</th>
+                        <th class="text-end">Management</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        int i = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-primary">#@i.ToString("D2")</td>
+                                <td style="font-weight: 500; max-width: 400px;">@item.QuestionText</td>
+                                <td>
+                                    <span class="score-badge">
+                                        @(item.Options?.Count() ?? 0) Options
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-light text-danger border-0" onclick="return confirm('Purge this module?')">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-cloud-slash display-4 d-block mb-3"></i>
+                                NO NEURAL DATA DETECTED. INITIALIZE AI SYNC.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-brain text-primary me-2"></i>Neural Sync Engine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="FetchFromAI" asp-controller="Question" method="post" id="aiForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="quizId" value="@quizId" />
+                    <input type="hidden" name="languageId" value="@languageId" />
+                    <div class="modal-body p-4">
+                        <div class="bg-light p-3 rounded-4 mb-4 border">
+                            <p class="small text-muted mb-0">
+                                <strong>Note:</strong> Gemini AI will deploy 10 unique technical modules based on your complexity target.
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Complexity Level</label>
+                            <select name="level" class="form-select border-0 bg-light p-3" style="border-radius: 12px;">
+                                <option value="Beginner">Junior / Foundation</option>
+                                <option value="Medium" selected>Mid-Level / Professional</option>
+                                <option value="Hard">Senior / Architect</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="submit" class="btn-mst w-100" id="syncBtn">INITIALIZE SYNC</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://jsdelivr.net"></script>
+    <script>
+        document.getElementById('aiForm').onsubmit = function() {
+            const btn = document.getElementById('syncBtn');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> SYNCHRONIZING...';
+            btn.disabled = true;
+        };
+    </script>
+</body>
+</html>

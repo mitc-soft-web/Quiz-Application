@@ -1,0 +1,87 @@
+﻿@model IEnumerable<string>
+@{
+    ViewData["Title"] = "Q-MSTech | Browse Categories";
+    Layout = null; 
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { --mst-cyan: #00d2ff; --mst-dark: #0f172a; }
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .category-card { 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 15px; 
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .category-card:hover { 
+            border-color: var(--mst-cyan); 
+            background: rgba(0, 210, 255, 0.05);
+            transform: translateY(-5px);
+        }
+        .hub-title { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--mst-cyan); }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <header class="mb-5 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="hub-title m-0">NEURAL_HUB</h2>
+                <p class="text-white-50">External Category Sync: Lightcast API</p>
+            </div>
+            <a href="/User/Dashboard" class="btn btn-outline-info rounded-pill px-4">Back to Console</a>
+        </header>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-warning bg-dark border-warning text-warning rounded-4 small">
+                <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+            </div>
+        }
+
+        <div class="row g-4">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var category in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="category-card p-4 h-100 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="bg-info bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-terminal-fill text-info"></i>
+                                </div>
+                                <span class="badge bg-success-subtle text-success small">Stable Link</span>
+                            </div>
+                            <h5 class="fw-bold mb-3">@category</h5>
+                            <form asp-action="Generate" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="category" value="@category" />
+                                <input type="hidden" name="difficulty" value="Intermediate" />
+                                <button type="submit" class="btn btn-sm btn-link text-info p-0 text-decoration-none">
+                                    Analyze Stream <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5 opacity-50">
+                    <i class="bi bi-cloud-slash display-1"></i>
+                    <p class="mt-3">No categories found in the external buffer.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+</body>
+</html>

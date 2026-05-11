@@ -1,0 +1,174 @@
+﻿@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Q-MSTech</title>
+    
+    <!-- Verified CDNs -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <style>
+            :root {
+                --mst-primary: #6366f1;
+                --mst-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+                --bg-soft: #f8fafc;
+                --navbar-height: 80px;
+            }
+
+            body {
+                background-color: var(--bg-soft);
+                color: #1e293b;
+                font-family: 'Inter', sans-serif;
+                min-height: 100vh;
+                margin: 0;
+                padding-top: var(--navbar-height);
+            }
+
+            .mst-nav {
+                background: rgba(255, 255, 255, 0.9) !important;
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid #e2e8f0;
+                height: var(--navbar-height);
+            }
+
+            .navbar-brand {
+                font-family: 'Orbitron', sans-serif;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                color: #0f172a !important;
+            }
+
+            .q-logo-small {
+                width: 36px;
+                height: 36px;
+                background: var(--mst-gradient);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 900;
+                color: white;
+                box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            }
+
+            .nav-link {
+                color: #64748b !important;
+                font-weight: 600;
+                font-size: 0.82rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                transition: 0.2s;
+            }
+
+                .nav-link:hover, .nav-link.active {
+                    color: var(--mst-primary) !important;
+                }
+
+            .mst-toast {
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                z-index: 1060;
+                min-width: 300px;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg fixed-top mst-nav">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="User" asp-action="Dashboard">
+                    <div class="q-logo-small me-2">Q</div>
+                    <span>MS<span style="background: var(--mst-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TECH</span></span>
+                </a>
+                
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                    <i class="bi bi-grid-3x3-gap-fill text-primary"></i>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto ms-lg-4">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="User" asp-action="Dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Quiz" asp-action="Index"> Quiz </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Language" asp-action="Index">Inventory</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Quiz" asp-action="History">Logs</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav align-items-center">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link fw-bold text-dark d-flex align-items-center">
+                                    <i class="bi bi-shield-check-fill me-2 text-success"></i>
+                                    @User.Identity.Name
+                                </span>
+                            </li>
+                            <li class="nav-item ms-lg-3">
+                                <a class="nav-link btn btn-outline-danger btn-sm rounded-pill px-3 border-2 fw-bold"
+                                   asp-controller="User" asp-action="Logout" style="font-size: 0.7rem;">LOGOUT</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ms-lg-3">
+                                <a class="nav-link btn btn-primary rounded-pill px-4 fw-bold"
+                                   asp-controller="User" asp-action="Login"
+                                   style="background: var(--mst-gradient); border:none; color:white;">AUTHORIZE</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container py-4">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+                <div class="fw-bold">SYNC_SUCCESS: @TempData["Message"]</div>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                <div class="fw-bold">ENGINE_ERROR: @TempData["Error"]</div>
+            </div>
+        }
+
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="https://jsdelivr.net"></script>
+    <script>
+        // Global Answer Validation Helper (AJAX)
+        async function validateNeuralLink(questionId, answerId) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const response = await fetch('/Answer/Validate', {
+        method: 'POST',
+        headers: { 'RequestVerificationToken': token },
+        body: new URLSearchParams({ 'questionId': questionId, 'answerId': answerId })
+        });
+        return await response.json();
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,66 @@
+﻿@{ Layout = null; }
+@model Quiz_Application.Models.DTO.User.LoginRequestModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Q-MSTech | Secure Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00d2ff; --bg: #0f172a; }
+        body { background: radial-gradient(circle at top right, #1e293b, #0f172a); font-family: 'Inter', sans-serif; color: white; min-height: 100vh; display: flex; align-items: center; }
+        .auth-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; backdrop-filter: blur(12px); }
+        .logo-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--primary); }
+        .form-control { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white !important; padding: 0.8rem 1.2rem; }
+        .form-control:focus { background: rgba(255,255,255,0.1); border-color: var(--primary); box-shadow: none; }
+        .btn-tech { background: var(--primary); color: var(--bg); font-weight: 700; border-radius: 50px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="auth-card p-5 shadow-lg">
+                    <div class="text-center mb-4">
+                        <h1 class="logo-text mb-2"><i class="bi bi-cpu"></i> Q-MS<span class="text-white">Tech</span></h1>
+                        <p class="text-white-50 small text-uppercase tracking-widest">Neural Link Authorization</p>
+                    </div>
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger border-0 bg-danger bg-opacity-25 text-white small rounded-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+                        </div>
+                    }
+
+                    <form asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">ID / Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="name@domain.tech" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Access Cipher</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" required />
+                        </div>
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" name="rememberMe" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label small" for="rememberMe">Maintain Connection</label>
+                        </div>
+                        <button type="submit" class="btn btn-tech w-100 py-3 mb-3">Establish Link</button>
+                    </form>
+                    
+                    <div class="text-center small">
+                        <span class="opacity-50">New Entity?</span> 
+                        <a asp-action="Register" class="text-info text-decoration-none fw-bold ms-1">Initialize Identity</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

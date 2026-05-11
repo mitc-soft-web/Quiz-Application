@@ -1,0 +1,167 @@
+﻿@using Quiz_Application.Models.Enum
+@{
+    Layout = null;
+    var languageId = ViewBag.LanguageId;
+    var languageName = ViewBag.LanguageName ?? "Unknown Topic";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configure Neural Assessment - Q-MSTech</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-tech: #00d2ff;
+            --dark-surface: #0f172a;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            color: white;
+        }
+
+        .form-select, .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white !important;
+            border-radius: 0.75rem;
+        }
+
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-tech);
+            box-shadow: none;
+        }
+
+        option { background: #1e293b; color: white; }
+
+        /* Custom Radio Button Styles */
+        .btn-check:checked + .btn-outline-success { background-color: rgba(25, 135, 84, 0.2); color: #4ade80; border-color: #4ade80; }
+        .btn-check:checked + .btn-outline-warning { background-color: rgba(255, 193, 7, 0.2); color: #fbbf24; border-color: #fbbf24; }
+        .btn-check:checked + .btn-outline-danger { background-color: rgba(220, 53, 69, 0.2); color: #f87171; border-color: #f87171; }
+        
+        .btn-outline-success, .btn-outline-warning, .btn-outline-danger { border-width: 2px; }
+
+        .logo-accent { color: var(--primary-tech); }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="text-center mb-5">
+                <h1 class="fw-bold mb-2">
+                    <i class="bi bi-cpu me-2 logo-accent"></i>Q-MS<span class="logo-accent">Tech</span>
+                </h1>
+                <p class="text-white-50">Initializing Knowledge Extraction for <strong>@languageName</strong></p>
+            </div>
+
+            <div class="card shadow-lg">
+                <div class="card-body p-4 p-md-5">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                        </div>
+                    }
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success border-0 shadow-sm mb-4" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                        </div>
+                    }
+
+                    <form asp-controller="Quiz" asp-action="Generate" method="post" id="quizForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="languageId" value="@languageId" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3 small text-uppercase opacity-75">Target Complexity Level</label>
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="lvlEasy" value="Beginner" checked>
+                                    <label class="btn btn-outline-success w-100 py-3" for="lvlEasy">
+                                        <i class="bi bi-reception-1 d-block mb-1"></i> Beginner
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="lvlMed" value="Intermediate">
+                                    <label class="btn btn-outline-warning w-100 py-3" for="lvlMed">
+                                        <i class="bi bi-reception-2 d-block mb-1"></i> Intermed.
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="lvlHard" value="Advanced">
+                                    <label class="btn btn-outline-danger w-100 py-3" for="lvlHard">
+                                        <i class="bi bi-reception-3 d-block mb-1"></i> Advanced
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="questionCount" class="form-label fw-bold small text-uppercase opacity-75">Question Density</label>
+                            <select class="form-select form-select-lg" id="questionCount" name="questionCount" required>
+                                <option value="20" selected>20 Questions (Minimum)</option>
+                                <option value="50">50 Questions (Standard)</option>
+                                <option value="100">100 Questions (Extended)</option>
+                                <option value="150">150 Questions (Maximum)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-info btn-lg rounded-pill fw-bold" id="btnGenerate">
+                                <span class="spinner-border spinner-border-sm d-none" id="loader"></span>
+                                <span id="btnText">Generate Neural Quiz</span>
+                            </button>
+                            <a asp-controller="Course" asp-action="Index" class="btn btn-link text-white-50 mt-2 text-decoration-none small">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel & Return
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 text-white-50 small">
+                <p><i class="bi bi-shield-check me-1"></i> AI verification active. Questions are prepared before the quiz session starts.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('quizForm').addEventListener('submit', function() {
+        const btn = document.getElementById('btnGenerate');
+        const loader = document.getElementById('loader');
+        const btnText = document.getElementById('btnText');
+
+        btn.disabled = true;
+        loader.classList.remove('d-none');
+        btnText.innerText = " Preparing Questions...";
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+﻿@model Quiz_Application.Models.DTO.ResultDTO
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Validation Outcome | Q-MsTech</title>
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    <style>
+        :root { --accent: @(Model.Score >= 70 ? "#22c55e" : "#f59e0b"); }
+        body { background: #020617; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
+        .result-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border-radius: 2.5rem; padding: 3.5rem; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 500px; }
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--accent); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 0 30px var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="result-card">
+        <div class="mb-4">
+            <i class="bi @(Model.Score >= 70 ? "bi-patch-check-fill text-success" : "bi-shield-exclamation text-warning") fs-1"></i>
+        </div>
+        <h2 class="fw-bold mb-4">Outcome Analysis</h2>
+        <div class="score-circle"><h1 class="mb-0">@((int)Model.Score)%</h1><small>Score</small></div>
+        <p class="text-secondary">You correctly identified <strong>@Model.Score</strong> out of <strong>@Model.TotalQuestions</strong> technical modules.</p>
+        <div class="d-grid gap-2 mt-4">
+            <a href="@Url.Action("Index", "Course")" class="btn btn-primary rounded-pill">NEW VALIDATION</a>
+            <a href="/" class="btn btn-outline-light rounded-pill">EXIT HUB</a>
+        </div>
+    </div>
+</body>
+</html>
