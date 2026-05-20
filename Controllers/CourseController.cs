@@ -29,11 +29,13 @@ namespace Quiz_Application.Controllers
         {
             try
             {
-                var courses = await _courseService.GetAllCoursesAsync(cancellation);
-                var tags = await _languageService.GetExternalTagsAsync();
+                var coursesTask = _courseService.GetAllCoursesAsync(cancellation);
+                var tagsTask = _languageService.GetExternalTagsAsync();
 
-                ViewBag.Tags = tags;
-                return View(courses);
+                await Task.WhenAll(coursesTask, tagsTask);
+
+                ViewBag.Tags = await tagsTask;
+                return View(await coursesTask);
             }
             catch (Exception ex)
             {
@@ -91,8 +93,12 @@ namespace Quiz_Application.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await _languageService.GenerateLanguagesForCourseAsync(course.Id, course.CourseName ?? "Technology", cancellation);
             var languages = await _languageService.GetLanguagesByCourseIdAsync(course.Id, cancellation);
+            if (!languages.Any())
+            {
+                await _languageService.GenerateLanguagesForCourseAsync(course.Id, course.CourseName ?? "Technology", cancellation);
+                languages = await _languageService.GetLanguagesByCourseIdAsync(course.Id, cancellation);
+            }
 
             var viewModel = new CourseDetailsViewModel
             {

@@ -59,7 +59,7 @@ namespace Quiz_Application.Implementation.Service
             }
 
             var questions = new List<QuestionDTO>();
-            var batchSize = 20;
+            var batchSize = Math.Clamp(_config.GetValue<int?>("QuizGeneration:BatchSize") ?? 50, 20, 75);
 
             while (questions.Count < numberOfQuestions)
             {
@@ -83,7 +83,7 @@ namespace Quiz_Application.Implementation.Service
                         temperature = 0.7,
                         topP = 0.95,
                         topK = 40,
-                        maxOutputTokens = 8192
+                        maxOutputTokens = 16384
                     }
                 };
 

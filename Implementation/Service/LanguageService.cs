@@ -114,13 +114,16 @@ namespace Quiz_Application.Implementation.Service
         };
 
                 var selectedTopics = ResolveTopics(courseCategory, manualMatrix);
+                var existingLanguages = await _languageRepository.GetLanguagesByCourseIdAsync(courseId);
+                var existingNames = existingLanguages
+                    .Select(l => l.LanguageName ?? string.Empty)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
                 var createdLanguages = new List<LanguageDTO>();
 
                 foreach (var skillName in selectedTopics)
                 {
-                    var existing = await _languageRepository.GetLanguageByNameAsync(skillName);
-                    if (existing != null && existing.CourseId == courseId) continue;
+                    if (existingNames.Contains(skillName)) continue;
 
                     var language = new Language
                     {
@@ -131,6 +134,7 @@ namespace Quiz_Application.Implementation.Service
                     };
 
                     await _languageRepository.AddLanguageAsync(language);
+                    existingNames.Add(skillName);
                     createdLanguages.Add(new LanguageDTO
                     {
                         Id = language.Id,
@@ -203,54 +207,9 @@ namespace Quiz_Application.Implementation.Service
         {
             if (_cache.TryGetValue(CACHE_KEY_TAGS, out List<string>? cachedTags) && cachedTags != null) return cachedTags;
 
-            var apiKey = _config["Gemini:ApiKey"];
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}"; 
-
-            var prompt = "List 10 popular technical programming domains. Return ONLY a raw JSON array of strings without markdown code blocks.";
-
-            var payload = new
-            {
-                contents = new[]
-                {
-            new { parts = new[] { new { text = prompt } } }
-        }
-            };
-
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync(url, payload);
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<JsonElement>();
-
-                    var aiText = result.GetProperty("candidates")[0]
-                                       .GetProperty("content")
-                                       .GetProperty("parts")[0]
-                                       .GetProperty("text")
-                                       .GetString();
-                    
-                    var cleanedJson = aiText?.Replace("```json", "").Replace("```", "").Trim();
-                    var tags = JsonSerializer.Deserialize<List<string>>(cleanedJson ?? "[]");
-
-                    if (tags != null && tags.Any())
-                    {
-                        tags = GetDefaultTechTags()
-                            .Concat(tags)
-                            .Distinct(StringComparer.OrdinalIgnoreCase)
-                            .OrderBy(x => x)
-                            .ToList();
-
-                        _cache.Set(CACHE_KEY_TAGS, tags, TimeSpan.FromHours(12));
-                        return tags;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gemini Tag Generation failed.");
-            }
-
-            return GetDefaultTechTags();
+            var tags = GetDefaultTechTags().OrderBy(x => x).ToList();
+            _cache.Set(CACHE_KEY_TAGS, tags, TimeSpan.FromHours(12));
+            return await Task.FromResult(tags);
         }
 
         private static List<string> GetDefaultTechTags()

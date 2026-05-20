@@ -44,44 +44,9 @@ namespace Quiz_Application.Implementation.Service
             const string cacheKey = "Lightcast_Programming_Skills";
             if (_cache.TryGetValue(cacheKey, out List<string>? cachedSkills) && cachedSkills != null) return cachedSkills;
 
-            try
-            {
-                var token = await GetLightcastTokenAsync();
-
-                var url = "https://emsiservices.com";
-
-                using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var response = await _httpClient.SendAsync(request);
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(json);
-
-                    var skills = doc.RootElement.GetProperty("data")
-                        .EnumerateArray()
-                        .Select(s => s.GetProperty("name").GetString() ?? "")
-                        .Where(n => !string.IsNullOrEmpty(n))
-                        .Distinct()
-                        .ToList();
-
-                    skills = GetDefaultTechCourses()
-                        .Concat(skills)
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .OrderBy(x => x)
-                        .ToList();
-
-                    _cache.Set(cacheKey, skills, TimeSpan.FromHours(1));
-                    return skills;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lightcast API error - Loading fallback list");
-            }
-
-            return GetDefaultTechCourses().OrderBy(x => x).ToList();
+            var skills = GetDefaultTechCourses().OrderBy(x => x).ToList();
+            _cache.Set(cacheKey, skills, TimeSpan.FromHours(12));
+            return await Task.FromResult(skills);
         }
 
         private static List<string> GetDefaultTechCourses()
