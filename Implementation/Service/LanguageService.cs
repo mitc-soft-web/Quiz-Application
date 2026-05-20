@@ -60,7 +60,6 @@ namespace Quiz_Application.Implementation.Service
             {
                 var manualMatrix = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
         {
-            // --- BROAD TECH COURSES ---
             { "Web Application", new List<string> { "C# .NET", "PHP", "C++", "C Programming", "Python", "Java", "JavaScript", "TypeScript", "HTML5", "CSS3", "ASP.NET Core MVC", "Laravel", "Django", "Node.js", "React.js", "Angular", "Vue.js", "SQL Database", "MySQL", "REST API Design", "Web Security", "Authentication & Authorization" } },
             { "Web Application Development", new List<string> { "C# .NET", "PHP", "C++", "C Programming", "Python", "Java", "JavaScript", "TypeScript", "HTML5", "CSS3", "ASP.NET Core MVC", "Laravel", "Django", "Node.js", "React.js", "Angular", "Vue.js", "SQL Database", "MySQL", "REST API Design", "Web Security", "Authentication & Authorization" } },
             { "Web Development", new List<string> { "C# .NET", "PHP", "C++", "C Programming", "Python", "Java", "JavaScript", "TypeScript", "HTML5", "CSS3", "ASP.NET Core MVC", "Laravel", "Django", "Node.js", "React.js", "Angular", "Vue.js", "SQL Database", "MySQL", "REST API Design", "Web Security", "Authentication & Authorization" } },
@@ -71,7 +70,6 @@ namespace Quiz_Application.Implementation.Service
             { "Database Systems", new List<string> { "SQL Database", "MySQL", "PostgreSQL", "SQL Server", "MongoDB", "Redis", "Database Design", "Query Optimization", "Indexing Strategies", "Stored Procedures", "Transactions", "NoSQL Solutions" } },
             { "Cloud Computing", new List<string> { "AWS Cloud Services", "Microsoft Azure", "Google Cloud Platform", "Cloud Security", "Docker", "Kubernetes", "Serverless Functions", "Cloud Databases", "CI/CD Pipelines", "Infrastructure as Code", "Cloud Networking", "Monitoring & Logging" } },
 
-            // --- PROGRAMMING LANGUAGES ---
             { "Python Development", new List<string> { "Django & FastAPI", "Pandas & NumPy", "Asyncio Concurrency", "PyTest & Mocking", "Metaprogramming", "Type Hinting", "Generators & Iterators", "Multi-threading vs Multi-processing" } },
             { "Java Enterprise", new List<string> { "Spring Boot 3", "Hibernate/JPA Logic", "JVM Memory Management", "Microservices Architecture", "Kafka Integration", "Spring Security", "Maven/Gradle Build", "Garbage Collection Tuning" } },
             { "C# .NET", new List<string> { "ASP.NET Core Web API", "Entity Framework Core","ASP.NET(MVC)", "LINQ & Data Structures", "SignalR Real-time", "MAUI Mobile", "Dependency Injection", "Asynchronous Patterns (Task/ValueTask)", "Middleware Pipelines" } },
@@ -83,37 +81,31 @@ namespace Quiz_Application.Implementation.Service
             { "PHP Web", new List<string> { "Laravel Framework", "Symfony Components", "PHP 8.x Attributes", "Composer Workflow", "Unit Testing", "Eloquent ORM Logic", "MVC Architecture" } },
             { "Ruby on Rails", new List<string> { "Active Record Logic", "ActionController Patterns", "Hotwire & Turbo", "RSpec Testing", "Metaprogramming Ruby", "Sidekiq Background Jobs" } },
 
-            // --- WEB & FRONTEND ---
             { "React.js Frontend", new List<string> { "React Hooks API", "Next.js 14 App Router", "State Management (Redux/Zustand)", "Component Architecture", "Performance Profiling", "Server Components (RSC)", "Client-side Routing" } },
             { "Angular Framework", new List<string> { "RxJS Observables", "Angular Signals", "Dependency Injection", "Directive Logic", "Zone.js Performance", "NgModule vs Standalone", "Interceptors" } },
             { "Vue.js Development", new List<string> { "Composition API", "Pinia Store", "Vue Router Guard", "Nuxt.js Integration", "Vite Tooling", "Virtual DOM Internals" } },
             { "HTML5 & CSS3", new List<string> { "Flexbox & Grid Layouts", "CSS Variables & Themes", "Web Accessibility (A11y)", "Canvas & SVG Animation", "Browser Rendering Path", "Sass/SCSS Preprocessing" } },
 
-            // --- CLOUD & INFRASTRUCTURE ---
             { "AWS Cloud Services", new List<string> { "Serverless (Lambda)", "IAM & Security Policy", "RDS & DynamoDB Clusters", "CloudFormation/CDK", "VPC Networking", "S3 & CloudFront", "SQS & SNS Messaging" } },
             { "Microsoft Azure", new List<string> { "Azure Functions", "Entra ID (Active Directory)", "Cosmos DB NoSQL", "Logic Apps Workflow", "AKS Orchestration", "Azure Devops Pipelines" } },
             { "Google Cloud Platform (GCP)", new List<string> { "Compute Engine", "BigQuery Analytics", "App Engine", "Cloud Run (Containers)", "Pub/Sub Messaging", "Cloud Spanner Architecture" } },
             { "DevOps Engineering", new List<string> { "Docker Containerization", "Kubernetes (K8s)", "Terraform IaC", "Jenkins/GitHub Actions", "Ansible Configuration", "CI/CD Pipeline Design", "Monitoring (Prometheus/Grafana)" } },
             { "Linux System Administration", new List<string> { "Bash Scripting", "Process Management", "Network Protocols", "Kernel Hardening", "SSH Security", "Systemd Services", "LVM & Disk Management" } },
 
-            // --- DATA & DATABASES ---
             { "SQL Database", new List<string> { "Query Optimization", "Indexing Strategies", "Stored Procedures", "Triggers & Events", "Normalisation (1NF-3NF)", "Window Functions", "Transaction ACID Properties" } },
             { "NoSQL Solutions", new List<string> { "MongoDB Aggregation", "Redis Caching Patterns", "Cassandra Partitioning", "Elasticsearch Logic", "Document vs Graph DBs", "Consistency Models" } },
             { "Big Data", new List<string> { "Apache Spark Streaming", "Hadoop Ecosystem", "Data Lakes & Warehousing", "ETL Process Design", "Hive Query Language", "Airflow Scheduling" } },
 
-            // --- AI & DATA SCIENCE ---
             { "Machine Learning", new List<string> { "Supervised Learning", "Model Evaluation Metrics", "Feature Selection", "Gradient Descent", "Scikit-Learn Workflow", "Ensemble Methods", "Hyperparameter Tuning" } },
             { "Deep Learning", new List<string> { "Neural Networks (CNN/RNN)", "PyTorch Framework", "TensorFlow Architecture", "Computer Vision Basics", "GPU Acceleration", "Backpropagation Math" } },
             { "Natural Language Processing (NLP)", new List<string> { "Tokenization & Embeddings", "Transformer Models", "Sentiment Analysis", "BERT & GPT Fine-tuning", "Regex Patterns", "Named Entity Recognition" } },
             { "Data Science & Analytics", new List<string> { "Exploratory Data Analysis", "Statistical Significance", "SQL Window Functions", "Power BI / Tableau", "Data ETL Pipelines", "Probability Theory" } },
             { "Generative AI & LLMs", new List<string> { "Prompt Engineering", "Vector Databases (Pinecone)", "LangChain Integration", "RAG Architecture", "Model Quantization", "Attention Mechanisms" } },
 
-            // --- CYBERSECURITY ---
             { "Ethical Hacking", new List<string> { "Penetration Testing", "Metasploit Pro", "Kali Linux Tooling", "Buffer Overflows", "Vulnerability Scanning", "Network Sniffing", "Social Engineering Protocols" } },
             { "Cybersecurity Fundamentals", new List<string> { "Cryptography Standards", "Zero Trust Architecture", "SOC Analysis", "Incident Response", "Compliance (GDPR/ISO)", "Risk Assessment", "Firewall Hardening" } },
             { "Network Security", new List<string> { "Firewall Config (WAF)", "VPN & Tunneling", "Wireshark Analysis", "IDPS Logic", "DNSSEC Protocols", "TLS/SSL Handshakes" } },
 
-            // --- MOBILE & SPECIALIZED ---
             { "Swift iOS", new List<string> { "SwiftUI Declarative", "UIKit Architecture", "Core Data Persistence", "Combine Framework", "App Store Guidelines", "Memory Management (ARC)" } },
             { "Kotlin Android", new List<string> { "Jetpack Compose", "Coroutines & Flow", "Dagger Hilt DI", "Room Database", "Retrofit API", "MVVM Architecture" } },
             { "Blockchain & Web3", new List<string> { "Solidity Contracts", "Ethereum EVM", "IPFS Storage", "Web3.js/Ethers.js", "Hyperledger Fabric", "Smart Contract Auditing" } },

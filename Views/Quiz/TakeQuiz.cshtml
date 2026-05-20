@@ -1,6 +1,9 @@
 ﻿@model Quiz_Application.Models.DTO.QuizDTO
 @{
     Layout = null;
+    var questionTotal = Model?.Questions?.Count ?? 0;
+    var durationMinutes = Math.Max(questionTotal, 1);
+    var durationSeconds = durationMinutes * 60;
 }
 
 <!DOCTYPE html>
@@ -15,7 +18,8 @@
     
     <style>
             :root {
-                --primary-tech: #0d6efd;
+                --primary-tech: #2563eb;
+                --secondary-tech: #06b6d4;
                 --dark-surface: #0f172a;
                 --bg-subtle: #f8f9fa;
             }
@@ -35,12 +39,52 @@
                 border-bottom: 1px solid #dee2e6;
             }
 
+            .timer-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 132px;
+                justify-content: center;
+                border-radius: 999px;
+                padding: 8px 14px;
+                background: #fff5f5;
+                color: #dc3545;
+                border: 1px solid #f1aeb5;
+                font-weight: 800;
+                font-family: 'Space Grotesk', sans-serif;
+            }
+
+            .timer-warning {
+                animation: timerPulse 1s infinite;
+            }
+
+            @@keyframes timerPulse {
+                50% {
+                    opacity: 0.55;
+                }
+            }
+
             .logo-text {
                 font-family: 'Space Grotesk', sans-serif;
                 font-weight: 800;
                 font-size: 1.75rem;
                 color: var(--primary-tech);
-                letter-spacing: -1px;
+                letter-spacing: 0;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.65rem;
+            }
+
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, var(--secondary-tech), var(--primary-tech));
+                color: white;
+                box-shadow: 0 12px 24px rgba(6, 182, 212, 0.22);
             }
 
             .quiz-card {
@@ -130,23 +174,30 @@
         <!-- Brand Header -->
         <div class="brand-header">
             <div>
-                <span class="logo-text">Q-MS</span><span class="text-dark fw-bold fs-3">Tech</span>
+                <span class="logo-text"><span class="logo-icon"><i class="bi bi-cpu"></i></span>Q-MS</span><span class="text-dark fw-bold fs-3">Tech</span>
             </div>
             <div class="text-end">
-                <h4 class="mb-0 fw-bold text-dark">@Model.LanguageName</h4>
+                <h4 class="mb-0 fw-bold text-dark">@Model!.LanguageName</h4>
                 <span class="badge bg-light text-primary border border-primary-subtle text-uppercase">
-                    Level: @Model.Level
+                    Level: @Model!.Level
                 </span>
+                <div class="mt-2">
+                    <span class="timer-pill" id="timerPill">
+                        <i class="bi bi-clock-history"></i>
+                        <span id="timerDisplay">@durationMinutes:00</span>
+                    </span>
+                </div>
             </div>
         </div>
 
         <form asp-action="Submit" method="post" id="quizForm">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="quizId" value="@Model.Id" />
+            <input type="hidden" name="quizId" value="@Model!.Id" />
+            <input type="hidden" name="timeExpired" id="timeExpired" value="false" />
 
-            @for (int i = 0; i < Model.Questions.Count; i++)
+            @for (int i = 0; i < questionTotal; i++)
             {
-                var q = Model.Questions[i];
+                var q = Model!.Questions[i];
                 <div class="card quiz-card shadow-sm mb-4 border-0">
                     <div class="card-body p-4 p-md-5">
                         <div class="mb-4">
@@ -170,7 +221,7 @@
                                     <div class="form-check m-0 d-flex align-items-center">
                                         <input class="form-check-input shadow-none" type="radio"
                                                name="answers[@q.Id]" value="@opt.Val"
-                                               id="q_@(q.Id)_@opt.Letter" required>
+                                               id="q_@(q.Id)_@opt.Letter">
                                         <span class="form-check-label ms-3 fs-6">
                                             <span class="text-muted me-2">@opt.Letter.</span> @opt.Val
                                         </span>
@@ -194,6 +245,44 @@
     </div>
 
     <script>
+            const form = document.getElementById('quizForm');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerPill = document.getElementById('timerPill');
+            const timeExpiredInput = document.getElementById('timeExpired');
+            let remainingSeconds = @durationSeconds;
+            let isSubmitting = false;
+            let countdownTimer = null;
+
+            function renderTimer() {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                if (remainingSeconds <= 60) {
+                    timerPill.classList.add('timer-warning');
+                }
+            }
+
+            function submitWhenTimeExpires() {
+                if (isSubmitting) {
+                    return;
+                }
+
+                timeExpiredInput.value = 'true';
+                form.requestSubmit();
+            }
+
+            renderTimer();
+            countdownTimer = setInterval(() => {
+                remainingSeconds -= 1;
+                renderTimer();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    submitWhenTimeExpires();
+                }
+            }, 1000);
+
             // Visual feedback for clicking the whole container
             document.querySelectorAll('.option-container').forEach(container => {
                 container.addEventListener('click', function() {
@@ -203,10 +292,18 @@
             });
 
             // Loading state on submit
-            document.getElementById('quizForm').onsubmit = function() {
+            form.onsubmit = function() {
+                if (isSubmitting) {
+                    return false;
+                }
+
+                isSubmitting = true;
+                clearInterval(countdownTimer);
                 const btn = this.querySelector('.submit-btn');
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing System Submission...';
+                btn.innerHTML = timeExpiredInput.value === 'true'
+                    ? '<span class="spinner-border spinner-border-sm me-2"></span>Time Up - Submitting...'
+                    : '<span class="spinner-border spinner-border-sm me-2"></span>Processing System Submission...';
             };
     </script>
 

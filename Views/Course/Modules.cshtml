@@ -12,14 +12,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --mst-cyan: #00d2ff; --mst-dark: #0f172a; }
-        body { background: #020617; color: white; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        :root { --mst-cyan: #06b6d4; --mst-blue: #2563eb; --mst-dark: #0f172a; }
+        body { background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.1), transparent 35%), #020617; color: white; font-family: 'Inter', sans-serif; min-height: 100vh; }
         
         .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         
         .topic-card {
             background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-            border: 1px solid rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.14);
             border-radius: 20px;
             padding: 2rem;
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -40,17 +40,17 @@
         }
 
         .topic-card:hover {
-            background: rgba(0, 210, 255, 0.08);
+            background: rgba(6, 182, 212, 0.08);
             border-color: var(--mst-cyan);
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.1);
         }
 
         .topic-card:hover::before { opacity: 1; }
 
         .btn-action {
-            background: var(--mst-cyan);
-            color: var(--mst-dark);
+            background: linear-gradient(135deg, var(--mst-cyan), var(--mst-blue));
+            color: white;
             border: none;
             border-radius: 50px;
             padding: 0.6rem 1.5rem;
@@ -84,12 +84,12 @@
             </div>
             <div class="d-flex justify-content-between align-items-end">
                 <div>
-                    <h1 class="fw-bold display-5">Neural Modules</h1>
-                    <p class="text-white-50 m-0">Select a specialized data stream to initialize your assessment.</p>
+                    <h1 class="fw-bold display-5">Available Topics</h1>
+                    <p class="text-white-50 m-0">Select a topic to start your assessment.</p>
                 </div>
                 <div class="text-end d-none d-md-block">
                     <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
-                        <i class="bi bi-cpu me-2"></i>AI GENERATED CONTENT
+                        <i class="bi bi-cpu me-2"></i>Q-MSTech Topics
                     </span>
                 </div>
             </div>
@@ -112,7 +112,7 @@
                             
                             <h4 class="fw-bold mb-2">@topic.LanguageName</h4>
                             <p class="text-white-50 small mb-4">
-                                Comprehensive evaluation of @topic.LanguageName core concepts and syntax logic.
+                                Comprehensive evaluation of @topic.LanguageName core concepts and practical usage.
                             </p>
                         </div>
                         
@@ -125,7 +125,7 @@
                                asp-route-languageId="@topic.Id"
                                asp-route-languageName="@topic.LanguageName"
                                class="btn-action">
-                                Initialize <i class="bi bi-lightning-fill ms-1"></i>
+                                Start Quiz <i class="bi bi-lightning-fill ms-1"></i>
                             </a>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
             {
                 <div class="col-12 text-center py-5 border border-secondary border-dashed rounded-4">
                     <i class="bi bi-cloud-slash display-4 text-muted mb-3"></i>
-                    <p class="text-muted m-0">No neural topics indexed. Return to dashboard to resync.</p>
+                    <p class="text-muted m-0">No topics found. Return to dashboard to regenerate.</p>
                     <a asp-action="Index" class="btn btn-outline-info btn-sm mt-3">Back to Hub</a>
                 </div>
             }

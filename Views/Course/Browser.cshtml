@@ -12,8 +12,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --mst-cyan: #00d2ff; --mst-dark: #0f172a; }
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        :root { --mst-cyan: #06b6d4; --mst-blue: #2563eb; --mst-dark: #0f172a; }
+        body { background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.1), transparent 35%), #0f172a; color: white; font-family: 'Inter', sans-serif; }
         .category-card { 
             background: rgba(255,255,255,0.03); 
             border: 1px solid rgba(255,255,255,0.1); 
@@ -23,10 +23,10 @@
         }
         .category-card:hover { 
             border-color: var(--mst-cyan); 
-            background: rgba(0, 210, 255, 0.05);
+            background: rgba(6, 182, 212, 0.05);
             transform: translateY(-5px);
         }
-        .hub-title { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--mst-cyan); }
+        .hub-title { font-family: 'Inter', sans-serif; letter-spacing: 0; color: var(--mst-cyan); font-weight: 800; }
     </style>
 </head>
 <body>
@@ -34,10 +34,10 @@
     <div class="container py-5">
         <header class="mb-5 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="hub-title m-0">NEURAL_HUB</h2>
-                <p class="text-white-50">External Category Sync: Lightcast API</p>
+                <h2 class="hub-title m-0">Q-MSTech Course Hub</h2>
+                <p class="text-white-50">Browse and generate technical course categories</p>
             </div>
-            <a href="/User/Dashboard" class="btn btn-outline-info rounded-pill px-4">Back to Console</a>
+            <a href="/User/Dashboard" class="btn btn-outline-info rounded-pill px-4">Back to Dashboard</a>
         </header>
 
         @if (TempData["Error"] != null)
@@ -66,7 +66,7 @@
                                 <input type="hidden" name="category" value="@category" />
                                 <input type="hidden" name="difficulty" value="Intermediate" />
                                 <button type="submit" class="btn btn-sm btn-link text-info p-0 text-decoration-none">
-                                    Analyze Stream <i class="bi bi-arrow-right"></i>
+                                    Create Course <i class="bi bi-arrow-right"></i>
                                 </button>
                             </form>
                         </div>

@@ -246,6 +246,9 @@ namespace Quiz_Application.Implementation.Service
                    exclusions +
                    $"Mix the question types: definitions, syntax or commands where relevant, debugging, security, practical scenarios, best practices, and real-world problem solving. " +
                    $"Difficulty level: {level}. {difficultyInstruction} " +
+                   $"Make the options challenging and educational: every question must have one clearly correct answer, but at least two wrong options must be realistic distractors that a learner could reasonably confuse with the correct answer. " +
+                   $"Do not make wrong options obviously silly, unrelated, or impossible. Use common mistakes, near-correct syntax, incomplete best practices, reversed concepts, or plausible but unsafe approaches as distractors. " +
+                   $"The correct answer must appear in a random position among the four options, not always first. " +
                    $"Start from question number {startNumber}, but do not include numbering in the JSON. " +
                    $"Each question must have 4 options. " +
                    $"The correctAnswer must be the full text of one of the options. " +

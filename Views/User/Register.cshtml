@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00d2ff; --bg: #0f172a; }
+        :root { --primary: #06b6d4; --secondary: #2563eb; --bg: #0f172a; }
         body { 
-            background: radial-gradient(circle at bottom left, #1e293b, #0f172a); 
+            background: radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.16), transparent 32%), linear-gradient(135deg, #0f172a, #111827); 
             font-family: 'Inter', sans-serif; 
             color: white; 
             min-height: 100vh; 
@@ -25,7 +25,9 @@
             border-radius: 2rem; 
             backdrop-filter: blur(12px); 
         }
-        .logo-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--primary); }
+        .brand-logo { display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: white; }
+        .brand-logo-icon { width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 16px 34px rgba(6, 182, 212, 0.28); }
+        .brand-logo-accent { color: var(--primary); }
         .form-control { 
             background: rgba(255,255,255,0.05); 
             border: 1px solid rgba(255,255,255,0.1); 
@@ -36,19 +38,19 @@
         .form-control:focus { 
             background: rgba(255,255,255,0.1); 
             border-color: var(--primary); 
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); 
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); 
         }
         .btn-tech { 
-            background: var(--primary); 
-            color: var(--bg); 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; 
             font-weight: 700; 
             border-radius: 50px; 
             transition: 0.3s;
         }
         .btn-tech:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
-            color: var(--bg);
+            box-shadow: 0 5px 15px rgba(6, 182, 212, 0.4);
+            color: white;
         }
     </style>
 </head>
@@ -58,8 +60,11 @@
             <div class="col-md-6 col-lg-5">
                 <div class="auth-card p-5 shadow-lg">
                     <div class="text-center mb-4">
-                        <h1 class="logo-text mb-2"><i class="bi bi-shield-plus"></i> Q-MS<span class="text-white">Tech</span></h1>
-                        <p class="text-white-50 small text-uppercase tracking-widest">New Identity Protocol</p>
+                        <h1 class="brand-logo mb-2">
+                            <span class="brand-logo-icon"><i class="bi bi-shield-plus"></i></span>
+                            <span>Q-MS<span class="brand-logo-accent">Tech</span></span>
+                        </h1>
+                        <p class="text-white-50 small text-uppercase">Create your account</p>
                     </div>
 
                     @if (TempData["Error"] != null)
@@ -96,8 +101,8 @@
                     </form>
                     
                     <div class="text-center small">
-                        <span class="opacity-50">Already Indexed?</span> 
-                        <a asp-action="Login" class="text-info text-decoration-none fw-bold ms-1">Access Terminal</a>
+                        <span class="opacity-50">Already registered?</span> 
+                        <a asp-action="Login" class="text-info text-decoration-none fw-bold ms-1">Login</a>
                     </div>
                 </div>
             </div>

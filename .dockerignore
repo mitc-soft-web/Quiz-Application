@@ -1,0 +1,11 @@
+bin/
+obj/
+.git/
+.github/
+.vs/
+build-check/
+*.user
+*.suo
+*.log
+Dockerfile
+docker-compose*.yml

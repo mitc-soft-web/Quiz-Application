@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: quiz-application
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__QuizContext
+        sync: false
+      - key: Gemini__ApiKey
+        sync: false
+      - key: Lightcast__clientId
+        sync: false
+      - key: Lightcast__clientSecret
+        sync: false
