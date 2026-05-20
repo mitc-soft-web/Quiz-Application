@@ -8,10 +8,18 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__QuizContext
-        sync: false
+        fromDatabase:
+          name: quiz-application-db
+          property: connectionString
       - key: Gemini__ApiKey
         sync: false
       - key: Lightcast__clientId
         sync: false
       - key: Lightcast__clientSecret
         sync: false
+
+databases:
+  - name: quiz-application-db
+    plan: free
+    databaseName: quiz_application
+    user: quiz_application_user

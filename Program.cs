@@ -21,17 +21,17 @@ if (!string.IsNullOrWhiteSpace(renderPort))
 
 builder.Services.AddControllersWithViews();
 
+var quizConnectionString = NormalizePostgresConnectionString(
+    builder.Configuration.GetConnectionString("QuizContext")
+    ?? builder.Configuration["DATABASE_URL"]
+    ?? string.Empty);
+
 builder.Services.AddDbContext<QuizContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("QuizContext"),
-        new MySqlServerVersion(new Version(9, 0, 0)),
-        mysqlOptions =>
+    options.UseNpgsql(
+        quizConnectionString,
+        npgsqlOptions =>
         {
-            // This enables the retry logic to handle transient connection failures
-            mysqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 10,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
+            npgsqlOptions.EnableRetryOnFailure(10, TimeSpan.FromSeconds(30), null);
         }
     ));
 
@@ -80,6 +80,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<QuizContext>();
+    dbContext.Database.Migrate();
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -102,3 +108,19 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+static string NormalizePostgresConnectionString(string connectionString)
+{
+    if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri) ||
+        (uri.Scheme != "postgres" && uri.Scheme != "postgresql"))
+    {
+        return connectionString;
+    }
+
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var username = Uri.UnescapeDataString(userInfo.ElementAtOrDefault(0) ?? string.Empty);
+    var password = Uri.UnescapeDataString(userInfo.ElementAtOrDefault(1) ?? string.Empty);
+    var database = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/'));
+
+    return $"Host={uri.Host};Port={uri.Port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+}
