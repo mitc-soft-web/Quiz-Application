@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Quiz_Application.Interface.Service;
+using Quiz_Application.Models;
 using Quiz_Application.Models.DTO;
 using Quiz_Application.Models.DTO.Question;
 using System.Security.Claims;
@@ -59,15 +60,21 @@ namespace Quiz_Application.Controllers
                 return RedirectToAction("Index", "Course");
             }
 
-            ViewBag.LanguageId = languageId;
-            ViewBag.LanguageName = string.IsNullOrWhiteSpace(languageName) ? language.LanguageName : languageName;
-            return View();
+            var selectedLanguageName = string.IsNullOrWhiteSpace(languageName) ? language.LanguageName : languageName;
+            var model = new QuizSetupViewModel
+            {
+                LanguageId = languageId,
+                LanguageName = selectedLanguageName ?? "Unknown Topic",
+                Subtopics = TechSubtopicCatalog.GetSubtopics(selectedLanguageName)
+            };
+
+            return View(model);
         }
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Generate(Guid languageId, string level, int questionCount, CancellationToken cancellation)
+        public async Task<IActionResult> Generate(Guid languageId, string level, int questionCount, List<string>? selectedSubtopics, CancellationToken cancellation)
         {
             if (languageId == Guid.Empty || string.IsNullOrWhiteSpace(level))
             {
@@ -79,7 +86,7 @@ namespace Quiz_Application.Controllers
 
             try
             {
-                var quiz = await _quizService.GenerateQuizAsync(userId, languageId, level, questionCount, cancellation);
+                var quiz = await _quizService.GenerateQuizAsync(userId, languageId, level, questionCount, selectedSubtopics, cancellation);
                 return View("TakeQuiz", quiz);
             }
             catch (InvalidOperationException ex)

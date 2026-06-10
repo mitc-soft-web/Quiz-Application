@@ -5,14 +5,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: QuizApplication
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: Qowiyy
+      POSTGRES_PASSWORD: Babatunde4373$
     ports:
       - "5432:5432"
     volumes:
       - quiz_application_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d QuizApplication"]
+      test: ["CMD-SHELL", "pg_isready -U Qowiyy -d QuizApplication"]
       interval: 10s
       timeout: 5s
       retries: 5

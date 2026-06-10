@@ -15,8 +15,8 @@
         public string? Category { get; set; }
         public List<string> Options { get; set; } = new List<string>();
         public string? UserSelection { get; set; }
-        public string? CorrectAnswer { get; internal set; }
-        public Guid QuizId { get; internal set; }
-        public string? CorrectOption { get; internal set; }
+        public string? CorrectAnswer { get; set; }
+        public Guid QuizId { get;  set; }
+        public string? CorrectOption { get;  set; }
     }
 }

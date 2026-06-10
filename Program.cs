@@ -9,6 +9,8 @@ using Quiz_Application.Interfaces.Repositories;
 using Quiz_Application.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Npgsql;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,13 +29,16 @@ var quizConnectionString = NormalizePostgresConnectionString(
     ?? string.Empty);
 
 builder.Services.AddDbContext<QuizContext>(options =>
+{
     options.UseNpgsql(
-        quizConnectionString,
-        npgsqlOptions =>
-        {
-            npgsqlOptions.EnableRetryOnFailure(10, TimeSpan.FromSeconds(30), null);
-        }
-    ));
+            quizConnectionString,
+            npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(10, TimeSpan.FromSeconds(30), null);
+            })
+        .ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+});
 
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -82,8 +87,17 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<QuizContext>();
-    dbContext.Database.Migrate();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<QuizContext>();
+        dbContext.Database.Migrate();
+    }
+    catch (NpgsqlException ex) when (app.Environment.IsDevelopment())
+    {
+        logger.LogError(ex, "Could not connect to PostgreSQL. Start PostgreSQL locally on port 5432 or run: docker compose up -d");
+        throw;
+    }
 }
 
 if (!app.Environment.IsDevelopment())

@@ -1,10 +1,14 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Quiz_Application.DBCONTEXT;
 
 #nullable disable
 
 namespace Quiz_Application.Migrations
 {
+    [DbContext(typeof(QuizContext))]
+    [Migration("20260520120000_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

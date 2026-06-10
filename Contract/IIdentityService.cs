@@ -7,7 +7,6 @@ namespace Quiz_Application.Contract
     public interface IIdentityService 
     {
         string GetUserIdentity();
-
         string GenerateToken(User user, IEnumerable<string> roles);
         public IEnumerable<Claim> ValidateToken(string jwtToken);
         JwtSecurityToken GetClaims(string token);

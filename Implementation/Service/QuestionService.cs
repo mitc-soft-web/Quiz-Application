@@ -41,14 +41,21 @@ namespace Quiz_Application.Implementation.Service
             _geminiApiKey = _config["Gemini:ApiKey"] ?? string.Empty;
         }
 
-        public async Task<List<QuestionDTO>> GenerateQuestionsFromApiAsync(Guid languageId, string level, int numberOfQuestions, Guid userId, CancellationToken cancellation)
+        public async Task<List<QuestionDTO>> GenerateQuestionsFromApiAsync(Guid languageId, string level, int numberOfQuestions, Guid userId, IEnumerable<string>? selectedSubtopics, CancellationToken cancellation)
         {
             var language = await _languageRepository.GetLanguageByIdAsync(languageId);
             if (language == null) throw new Exception("Invalid language");
 
             numberOfQuestions = Math.Clamp(numberOfQuestions, 20, 150);
             var languageName = language.LanguageName ?? "Technology";
-            var focusAreas = GetFocusAreas(languageName);
+            var allowedSubtopics = TechSubtopicCatalog.GetSubtopics(languageName);
+            var selected = (selectedSubtopics ?? Enumerable.Empty<string>())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => s.Trim())
+                .Where(s => allowedSubtopics.Contains(s, StringComparer.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var focusAreas = selected.Any() ? selected : allowedSubtopics;
             var previousQuestions = (await _questionRepository.GetPreviousQuestionTextsAsync(userId, languageId))
                 .Select(NormalizeQuestion)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -364,53 +371,6 @@ namespace Quiz_Application.Implementation.Service
                 "advanced" => "Ask advanced questions: optimization, internals, complex scenarios, scalability, edge cases, and expert-level reasoning.",
                 "expert" => "Ask expert questions: deep internals, architecture tradeoffs, failure modes, performance, and scenario-based problem solving.",
                 _ => "Match the requested skill level and keep the questions practical."
-            };
-        }
-
-        private static List<string> GetFocusAreas(string languageName)
-        {
-            var key = languageName.Trim().ToLowerInvariant();
-            var map = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["c# .net"] = new() { "C# syntax", "OOP", "LINQ", "ASP.NET Core MVC", "Web API", "Entity Framework Core", "dependency injection", "async/await", "middleware", "authentication", "validation", "debugging", "unit testing" },
-                ["asp.net core mvc"] = new() { "controllers", "actions", "routing", "views", "models", "Razor syntax", "model binding", "validation", "Entity Framework Core", "authentication", "dependency injection", "middleware" },
-                ["php"] = new() { "PHP syntax", "forms", "sessions", "arrays", "functions", "OOP", "PDO database access", "Laravel basics", "validation", "authentication", "security", "file handling" },
-                ["python"] = new() { "Python syntax", "functions", "lists and dictionaries", "OOP", "exceptions", "file handling", "modules", "virtual environments", "Django basics", "FastAPI basics", "testing", "debugging" },
-                ["java"] = new() { "Java syntax", "OOP", "collections", "exceptions", "streams", "Spring Boot", "JPA/Hibernate", "REST APIs", "validation", "testing", "debugging" },
-                ["javascript"] = new() { "JavaScript syntax", "DOM", "functions", "arrays", "objects", "promises", "async/await", "events", "fetch API", "Node.js", "debugging", "browser behavior" },
-                ["typescript"] = new() { "types", "interfaces", "generics", "classes", "modules", "async logic", "type narrowing", "Node.js", "frontend integration", "debugging" },
-                ["c++"] = new() { "syntax", "pointers", "references", "OOP", "STL containers", "memory management", "templates", "exceptions", "performance", "debugging" },
-                ["c programming"] = new() { "syntax", "pointers", "arrays", "strings", "structs", "memory allocation", "file I/O", "preprocessor", "debugging", "data structures" },
-                ["html5"] = new() { "semantic HTML", "forms", "tables", "media", "accessibility", "SEO basics", "validation", "page structure" },
-                ["css3"] = new() { "selectors", "box model", "flexbox", "grid", "responsive design", "variables", "animations", "specificity", "layout debugging" },
-                ["react.js"] = new() { "components", "props", "state", "hooks", "events", "forms", "routing", "API calls", "rendering", "performance", "testing" },
-                ["angular"] = new() { "components", "templates", "services", "dependency injection", "routing", "forms", "RxJS", "HTTP client", "guards", "testing" },
-                ["vue.js"] = new() { "components", "reactivity", "props", "events", "composition API", "routing", "Pinia", "forms", "API calls" },
-                ["node.js"] = new() { "runtime", "modules", "npm", "Express", "routing", "middleware", "REST APIs", "authentication", "database access", "error handling" },
-                ["sql database"] = new() { "SELECT queries", "joins", "filtering", "aggregation", "indexes", "normalization", "transactions", "stored procedures", "query optimization" },
-                ["mysql"] = new() { "tables", "relationships", "SELECT queries", "joins", "indexes", "constraints", "transactions", "stored procedures", "backup basics" },
-                ["network security"] = new() { "firewalls", "VPNs", "TLS", "DNS security", "IDS/IPS", "Wireshark", "network attacks", "hardening", "monitoring" },
-                ["cybersecurity fundamentals"] = new() { "CIA triad", "authentication", "authorization", "cryptography", "risk assessment", "malware", "incident response", "secure passwords" },
-                ["aws cloud services"] = new() { "EC2", "S3", "IAM", "VPC", "Lambda", "RDS", "CloudFront", "security groups", "monitoring", "cost basics" },
-                ["microsoft azure"] = new() { "Azure App Service", "Azure Functions", "storage accounts", "Entra ID", "Cosmos DB", "virtual networks", "monitoring", "deployment" },
-                ["machine learning"] = new() { "supervised learning", "unsupervised learning", "features", "training", "testing", "metrics", "overfitting", "model evaluation", "scikit-learn" },
-                ["artificial intelligence"] = new() { "AI concepts", "machine learning", "neural networks", "NLP", "computer vision", "model evaluation", "prompt engineering", "ethics" }
-            };
-
-            if (map.TryGetValue(key, out var focusAreas)) return focusAreas;
-
-            foreach (var pair in map)
-            {
-                if (key.Contains(pair.Key) || pair.Key.Contains(key))
-                {
-                    return pair.Value;
-                }
-            }
-
-            return new List<string>
-            {
-                "core concepts", "basic syntax or terminology", "practical usage", "debugging",
-                "security", "best practices", "testing", "performance", "real-world scenarios"
             };
         }
 
